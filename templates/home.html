@@ -1,0 +1,140 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Difference Detection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-black min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="w-full dark:bg-gray-800 text-white py-4 px-6 flex items-center justify-between shadow-md">
+        <!-- Logo and Project Name -->
+        <div class="flex items-center space-x-4">
+            <img src="{{ url_for('static', filename='uploads/IMG_6663.JPG') }}" alt="Logo" class="h-10 w-10 rounded-full">
+            <span class="text-2xl font-bold">Real-time card stunt anomaly detection system</span>
+        </div>
+        <!-- Navigation Links -->
+        <div class="flex space-x-6">
+            <a href="/" class="text-lg font-medium hover:underline">App</a>
+            <a href="/about.html" class="text-lg font-medium hover:underline">About</a>
+
+        </div>        
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex flex-col items-center justify-center flex-grow p-4">
+        <div class="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Live Detection Section -->
+            <div class="bg-green-100 p-4 rounded-lg border shadow-md">
+                <h2 class="text-lg font-bold mb-2 text-center">Live Detection</h2>
+                <div class="relative w-full overflow-hidden bg-gray-200 rounded-md" style="padding-top: 56.25%; /* 16:9 Aspect Ratio */">
+                    <img src="{{url_for('video_feed')}}" alt="Live Detection" class="absolute top-0 left-0 w-full h-full object-cover">
+                </div>
+                <div class="mt-4 text-center">
+                    <p id="differences" class="text-sm font-bold text-gray-600"><span class="text-red-500"></span></p>
+                </div>
+            </div>
+
+            <!-- Reference Image and Differences Section -->
+            <div class="flex flex-col bg-blue-100 p-4 rounded-lg border shadow-md">
+                <h2 class="text-lg font-bold mb-2 text-center">Reference Image</h2>
+                <div class="mb-4">
+                    <label for="fileInput" class="block text-sm font-medium text-gray-700 mb-2">Upload Reference Image</label>
+                    <input id="fileInput" type="file" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50">
+                </div>
+                <div class="mb-4">
+                    <img id="referenceImage" src="" alt="Reference Image" class="object-contain w-full rounded-md border">
+                </div>
+                <button id="toggleButton" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">Start Detection</button>
+            </div>
+        </div>
+
+        <!-- Differences Section -->
+        <div class="w-full max-w-4xl bg-purple-100 p-4 mt-6 rounded-lg border shadow-md">
+            <h2 class="text-lg font-bold mb-2 text-center">Differences Position</h2>
+            <div class="relative max-h-32 flex items-center justify-center overflow-y-auto p-2 bg-purple-50 rounded-lg border border-gray-300">
+                <div class="text-sm text-gray-700">
+                    <pre id="position"></pre>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', async function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('referenceImage').src = data.filepath;
+                } else {
+                    alert(data.error);
+                }
+            }
+        });
+
+        document.getElementById('toggleButton').addEventListener('click', async function () {
+            const button = document.getElementById('toggleButton');
+
+            if (button.textContent === "Start Detection") {
+                // Enable detection
+                await fetch('/toggle_processing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enable: true }),
+                });
+
+                button.textContent = "Stop Detection";
+                button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                button.classList.add('bg-red-600', 'hover:bg-red-700');
+
+                alert("Detection started!");
+            } else {
+                // Disable detection
+                await fetch('/toggle_processing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enable: false }),
+                });
+
+                button.textContent = "Start Detection";
+                button.classList.remove('bg-red-600', 'hover:bg-red-700');
+                button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+
+                alert("Detection stopped!");
+            }
+        });
+
+        async function updateDifferences() {
+            const response = await fetch('/differences');
+            const data = await response.json();
+
+            // Update the differences section
+            document.getElementById('differences').textContent = `Total Difference: ${data.count} positions`;
+            
+            // Update positions
+            const positions = data.positions.map(
+                pos => `Position: ${pos.label} | SSIM Score: ${pos.score.toFixed(4)}`
+            ).join('\n');
+            document.getElementById('position').textContent = positions;
+        }
+
+        // Periodically update differences
+        setInterval(updateDifferences, 1000);
+    </script>
+    
+</body>
+</html>
