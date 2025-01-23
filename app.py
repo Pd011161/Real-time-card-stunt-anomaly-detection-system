@@ -10,7 +10,6 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png'}
 
-# Global Variables
 reference_image_path = None
 processing_enabled = False
 reference_image = None
@@ -24,9 +23,14 @@ threshold = 0.75
 box_size = (5, 5)
 grid_size = (25, 50)
 
+# cap = cv2.VideoCapture(0)
+# if not cap.isOpened():
+#     raise ValueError("ไม่สามารถเปิดกล้องได้")
+
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
-    raise ValueError("ไม่สามารถเปิดกล้องได้")
+    print("Warning: ไม่สามารถเปิดกล้องได้ แต่โปรแกรมจะยังทำงานต่อ")
+    cap = None  # หรือปรับโค้ดอื่นๆ ให้รองรับการทำงานแบบไม่มีกล้อง
 
 
 def align_images(image1, image2):
@@ -94,9 +98,9 @@ def generate():
             transformed_ref, transformed_frame = image_transformation(reference_image, aligned_frame)
             differences = SSIM_Score(transformed_frame, transformed_ref, grid_size[0], grid_size[1], box_size[0], box_size[1], threshold)
             highlighted_frame = ssim_position(differences, transformed_frame, box_size[0], box_size[1])
-            # **ขยายภาพกลับสำหรับแสดงผล**
-            height, width = frame.shape[:2]  # ใช้ขนาดต้นฉบับจากกล้อง
-            highlighted_frame = cv2.resize(highlighted_frame, (width, height))  # ขยายกลับ
+            
+            height, width = frame.shape[:2]  
+            highlighted_frame = cv2.resize(highlighted_frame, (width, height))  
         else:
             highlighted_frame = frame
 
@@ -157,4 +161,5 @@ def video_feed():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5003)
+    app.run(debug=True, host='0.0.0.0', port=5003)
+
