@@ -1,6 +1,7 @@
 # Real-time-card-stunt-anomaly-detection-system
 
 3 Step of run:
+
 0.1) python -m venv u_env
 0.2) source u_env/bin/activate
 1) pip install -r requirements.txt
