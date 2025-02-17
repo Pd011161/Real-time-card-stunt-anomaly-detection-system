@@ -23,15 +23,10 @@ threshold = 0.75
 box_size = (5, 5)
 grid_size = (25, 50)
 
-# cap = cv2.VideoCapture(0)
-# if not cap.isOpened():
-#     raise ValueError("ไม่สามารถเปิดกล้องได้")
-
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     print("Warning: ไม่สามารถเปิดกล้องได้ แต่โปรแกรมจะยังทำงานต่อ")
-    cap = None  # หรือปรับโค้ดอื่นๆ ให้รองรับการทำงานแบบไม่มีกล้อง
-
+    cap = None 
 
 def align_images(image1, image2):
     gray1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
