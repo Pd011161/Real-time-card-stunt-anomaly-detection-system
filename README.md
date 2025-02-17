@@ -1,6 +1,6 @@
 # Real-time-card-stunt-anomaly-detection-system
 
-5 Step of run:
+6 Step of use:
 
 1) python -m venv venv
 2) source venv/bin/activate
