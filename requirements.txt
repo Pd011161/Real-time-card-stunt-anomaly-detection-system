@@ -1,9 +1,9 @@
-flask
+Flask
 opencv-python-headless
-numpy==1.23.5
+numpy==1.26.4
 scikit-image
 matplotlib
 Werkzeug
-flask-socketio 
+flask-socketio
 eventlet
 flask-cors
