@@ -1,6 +1,6 @@
 # Real-time-card-stunt-anomaly-detection-system
 
-3 Step of run:
+5 Step of run:
 
 1) python -m venv you_env
 2) source you_env/bin/activate
