@@ -7,7 +7,8 @@ import io
 from skimage.metrics import structural_similarity as ssim
 import threading
 
-app = Flask(__name__)
+# app = Flask(__name__)
+app = Flask(__name__, template_folder="../templates", static_folder="../static")
 
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png'}
@@ -211,3 +212,6 @@ if __name__ == '__main__':
     import os
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
+
+def handler(environ, start_response):
+    return app.wsgi_app(environ, start_response)
