@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        #webcam {
+            transition: opacity 0.2s;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-tr from-blue-50 via-purple-50 to-yellow-50 min-h-screen">
@@ -27,108 +30,127 @@
     <!-- Main Container -->
     <main class="flex flex-col items-center w-full min-h-screen py-8 px-2 sm:px-6">
 
-        
-
         <!-- Main Card -->
-    <section class="w-full max-w-4xl bg-white/80 shadow-2xl rounded-3xl px-6 py-8 flex flex-col md:flex-row gap-8 border border-gray-200">
+        <section class="w-full max-w-4xl bg-white/80 shadow-2xl rounded-3xl px-6 py-8 flex flex-col md:flex-row gap-8 border border-gray-200">
 
-        <!-- Reference Image Card + Detection Mode -->
-        <div class="flex-1 flex flex-col gap-5">
-            <!-- Detection Mode Selector อยู่บนสุดของ Card -->
-            <div class="flex flex-col gap-1 mb-2">
-                <label for="modeSelect" class="font-semibold text-lg min-w-max">Detection Mode:</label>
-                <select id="modeSelect" class="rounded-xl border border-gray-300 p-2 text-base bg-white focus:ring-2 focus:ring-blue-400 shadow-sm transition w-full max-w-xs">
-                    <option value="live">Live Detection (Webcam)</option>
-                    <option value="image">Image Detection (Upload)</option>
-                </select>
-            </div>
-            <h2 class="text-lg font-bold text-blue-800 mb-1">1. Reference Image</h2>
-            <label for="fileInput" class="block text-base font-medium mb-2 text-gray-800">Upload Reference</label>
-            <input id="fileInput" type="file"
-                class="block w-full text-gray-700 border border-dashed border-blue-400 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
-            <p class="text-xs text-gray-500 mt-1">JPG, PNG. Max 5MB.</p>
-            <img id="referenceImage" src="" alt="Reference Image"
-                class="aspect-video w-full object-contain bg-gradient-to-br from-blue-100 via-white to-blue-50 rounded-xl border border-blue-200 shadow-inner min-h-[120px]"/>
-        </div>
-
-        <!-- Detection Card -->
-        <div class="flex-1 flex flex-col gap-5">
-            <!-- Detection header -->
-            <div id="liveDetectionSection">
-                <h2 class="text-lg font-bold text-green-800 mb-1">2. Live Detection</h2>
-                <div class="relative w-full flex justify-center overflow-hidden rounded-xl bg-gradient-to-br from-green-100 via-white to-green-50 aspect-video border border-green-200 shadow-inner mb-2">
-                    <img src="{{url_for('video_feed')}}" alt="Live Detection"
-                        class="w-full h-full object-cover" />
+            <!-- Reference Image Card + Detection Mode -->
+            <div class="flex-1 flex flex-col gap-5">
+                <div class="flex flex-col gap-1 mb-2">
+                    <label for="modeSelect" class="font-semibold text-lg min-w-max">Detection Mode:</label>
+                    <select id="modeSelect" class="rounded-xl border border-gray-300 p-2 text-base bg-white focus:ring-2 focus:ring-blue-400 shadow-sm transition w-full max-w-xs">
+                        <option value="live">Live Detection (Webcam)</option>
+                        <option value="image">Image Detection (Upload)</option>
+                    </select>
                 </div>
-            </div>
-            <div id="imageDetectionSection" class="hidden">
-                <h2 class="text-lg font-bold text-yellow-800 mb-1">2. Image Detection</h2>
-                <label for="capturedImageInput" class="block text-base font-medium mb-2 text-gray-800">Upload Detected Image</label>
-                <input id="capturedImageInput" type="file" accept="image/*"
-                    class="block w-full text-gray-700 border border-dashed border-yellow-400 rounded-xl bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-200 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-yellow-100 file:text-yellow-700 hover:file:bg-yellow-200 transition" />
+                <h2 class="text-lg font-bold text-blue-800 mb-1">1. Reference Image</h2>
+                <label for="fileInput" class="block text-base font-medium mb-2 text-gray-800">Upload Reference</label>
+                <input id="fileInput" type="file"
+                    class="block w-full text-gray-700 border border-dashed border-blue-400 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
                 <p class="text-xs text-gray-500 mt-1">JPG, PNG. Max 5MB.</p>
-                <img id="capturedPreview" src="" alt="Captured Preview"
-                    class="aspect-video w-full object-contain bg-gradient-to-br from-yellow-100 via-white to-yellow-50 rounded-xl border border-yellow-200 shadow-inner min-h-[120px]" />
+                <img id="referenceImage" src="" alt="Reference Image"
+                    class="aspect-video w-full object-contain bg-gradient-to-br from-blue-100 via-white to-blue-50 rounded-xl border border-blue-200 shadow-inner min-h-[120px]"/>
             </div>
-            <!-- Main Button -->
-            <button id="toggleButton"
-                class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-2.5 rounded-xl shadow hover:from-blue-700 hover:to-purple-700 transition text-lg tracking-wide mt-2">Start Detection</button>
-            <!-- Differences summary -->
-            <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 mt-1 shadow-inner">
-                <div id="differenceSummary" class="flex items-center gap-2">
-                    <span class="text-base font-bold text-purple-800">Summary:</span>
-                    <span id="differencesLive" class="text-sm font-medium text-green-700"></span>
-                    <span id="differencesImage" class="text-sm font-medium text-yellow-700"></span>
+
+            <!-- Detection Card -->
+            <div class="flex-1 flex flex-col gap-5">
+                <!-- Live Detection Section -->
+                <div id="liveDetectionSection">
+                    <h2 class="text-lg font-bold text-green-800 mb-1">2. Live Detection</h2>
+                    <div class="relative w-full flex justify-center overflow-hidden rounded-xl bg-gradient-to-br from-green-100 via-white to-green-50 aspect-video border border-green-200 shadow-inner mb-2">
+                        <video id="webcam" autoplay playsinline muted class="w-full h-full object-cover rounded-xl"></video>
+                        <img id="liveResultImage" src="" alt="Live Detection Output"
+                            class="w-full h-full object-cover rounded-xl absolute inset-0 hidden" />
+                    </div>
                 </div>
-                <!-- Differences Position (Details, compact, not big) -->
-                <div class="flex justify-center mt-2">
-                    <div class="w-full max-w-md">
-                        <div class="rounded-xl border border-purple-100 bg-white/90 shadow px-3 py-2 text-gray-800 text-xs font-mono whitespace-pre-line min-h-[32px]" id="positionBox">
-                            <span class="text-gray-400 italic" id="positionPlaceholder">No differences found.</span>
+                <!-- Image Detection Section -->
+                <div id="imageDetectionSection" class="hidden">
+                    <h2 class="text-lg font-bold text-yellow-800 mb-1">2. Image Detection</h2>
+                    <label for="capturedImageInput" class="block text-base font-medium mb-2 text-gray-800">Upload Detected Image</label>
+                    <input id="capturedImageInput" type="file" accept="image/*"
+                        class="block w-full text-gray-700 border border-dashed border-yellow-400 rounded-xl bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-200 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-yellow-100 file:text-yellow-700 hover:file:bg-yellow-200 transition" />
+                    <p class="text-xs text-gray-500 mt-1">JPG, PNG. Max 5MB.</p>
+                    <img id="capturedPreview" src="" alt="Captured Preview"
+                        class="aspect-video w-full object-contain bg-gradient-to-br from-yellow-100 via-white to-yellow-50 rounded-xl border border-yellow-200 shadow-inner min-h-[120px]" />
+                </div>
+                <!-- Main Button -->
+                <button id="toggleButton"
+                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-2.5 rounded-xl shadow hover:from-blue-700 hover:to-purple-700 transition text-lg tracking-wide mt-2">Start Detection</button>
+                <!-- Differences summary -->
+                <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 mt-1 shadow-inner">
+                    <div id="differenceSummary" class="flex items-center gap-2">
+                        <span class="text-base font-bold text-purple-800">Summary:</span>
+                        <span id="differencesLive" class="text-sm font-medium text-green-700"></span>
+                        <span id="differencesImage" class="text-sm font-medium text-yellow-700"></span>
+                    </div>
+                    <div class="flex justify-center mt-2">
+                        <div class="w-full max-w-md">
+                            <div class="rounded-xl border border-purple-100 bg-white/90 shadow px-3 py-2 text-gray-800 text-xs font-mono whitespace-pre-line min-h-[32px]" id="positionBox">
+                                <span class="text-gray-400 italic" id="positionPlaceholder">No differences found.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-
+        </section>
     </main>
 
     <!-- Script Section -->
     <script>
-        // Toggle mode
-        const modeSelect = document.getElementById('modeSelect');
-        const liveSection = document.getElementById('liveDetectionSection');
-        const imageSection = document.getElementById('imageDetectionSection');
-        modeSelect.addEventListener('change', function () {
-            if (modeSelect.value === 'live') {
-                liveSection.classList.remove('hidden');
-                imageSection.classList.add('hidden');
-            } else {
-                liveSection.classList.add('hidden');
-                imageSection.classList.remove('hidden');
-            }
-            // Reset button style/text on mode change
-            const button = document.getElementById('toggleButton');
-            if (modeSelect.value === 'live') {
-                button.textContent = liveDetectionStarted ? "Stop Detection" : "Start Detection";
-                button.classList.remove('bg-gray-400', 'hover:bg-gray-500');
-                button.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-red-600', 'hover:bg-red-700');
-                button.classList.add(liveDetectionStarted ? 'bg-red-600' : 'bg-blue-600');
-                button.classList.add(liveDetectionStarted ? 'hover:bg-red-700' : 'hover:bg-blue-700');
-            } else {
-                button.textContent = "Start Detection";
-                button.classList.remove('bg-red-600', 'hover:bg-red-700');
-                button.classList.remove('bg-gray-400', 'hover:bg-gray-500');
-                button.classList.add('bg-blue-600', 'hover:bg-blue-700');
-            }
-        });
-
         // State
         let capturedFile = null;
         let liveDetectionStarted = false;
+        let webcamStream = null;
+        let captureInterval = null;
+        let liveImageInterval = null;
 
-        // Handle Reference Image Upload
+        const modeSelect = document.getElementById('modeSelect');
+        const liveSection = document.getElementById('liveDetectionSection');
+        const imageSection = document.getElementById('imageDetectionSection');
+        const webcamElement = document.getElementById('webcam');
+        const liveResultImage = document.getElementById('liveResultImage');
+
+        // Webcam control functions
+        async function startWebcam() {
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                webcamElement.srcObject = webcamStream;
+                webcamElement.style.opacity = 1;
+                webcamElement.style.position = '';
+                webcamElement.style.pointerEvents = '';
+            } catch (err) {
+                alert("Cannot access camera: " + err.message);
+            }
+        }
+        function stopWebcam() {
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+            }
+            webcamElement.srcObject = null;
+            webcamElement.style.opacity = 1;
+            webcamElement.style.position = '';
+            webcamElement.style.pointerEvents = '';
+        }
+
+        // Capture and send frame to backend
+        async function sendWebcamFrame() {
+            if (!webcamStream) return;
+            let video = webcamElement;
+            if (video.videoWidth === 0 || video.videoHeight === 0) return;
+            let canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+            const formData = new FormData();
+            formData.append('frame', blob, 'frame.jpg');
+            try {
+                await fetch('/live_frame', { method: 'POST', body: formData });
+            } catch (e) {}
+        }
+
+        // Reference Image Upload
         document.getElementById('fileInput').addEventListener('change', async function (event) {
             const file = event.target.files[0];
             if (file) {
@@ -149,7 +171,7 @@
             }
         });
 
-        // Handle Captured Image Upload (preview only)
+        // Captured Image Upload
         document.getElementById('capturedImageInput').addEventListener('change', function (event) {
             capturedFile = event.target.files[0];
             const preview = document.getElementById('capturedPreview');
@@ -160,37 +182,105 @@
             preview.src = URL.createObjectURL(capturedFile);
         });
 
-        // Main Start Detection Button
+        // Toggle Mode
+        modeSelect.addEventListener('change', function () {
+            if (modeSelect.value === 'live') {
+                liveSection.classList.remove('hidden');
+                imageSection.classList.add('hidden');
+                webcamElement.style.opacity = 1;
+                webcamElement.style.position = '';
+                webcamElement.style.pointerEvents = '';
+                liveResultImage.classList.add('hidden');
+                startWebcam();
+                stopLiveResultImage();
+                if (liveDetectionStarted) {
+                    clearInterval(captureInterval);
+                    captureInterval = null;
+                    stopLiveResultImage();
+                    fetch('/toggle_processing', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enable: false }),
+                    });
+                    liveDetectionStarted = false;
+                    document.getElementById('toggleButton').textContent = "Start Detection";
+                }
+            } else {
+                liveSection.classList.add('hidden');
+                imageSection.classList.remove('hidden');
+                stopWebcam();
+                stopLiveResultImage();
+                if (liveDetectionStarted) {
+                    clearInterval(captureInterval);
+                    captureInterval = null;
+                    stopLiveResultImage();
+                    fetch('/toggle_processing', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enable: false }),
+                    });
+                    liveDetectionStarted = false;
+                    document.getElementById('toggleButton').textContent = "Start Detection";
+                }
+            }
+            // Reset button style/text on mode change
+            const button = document.getElementById('toggleButton');
+            if (modeSelect.value === 'live') {
+                button.textContent = liveDetectionStarted ? "Stop Detection" : "Start Detection";
+                button.classList.remove('bg-gray-400', 'hover:bg-gray-500');
+                button.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-red-600', 'hover:bg-red-700');
+                button.classList.add(liveDetectionStarted ? 'bg-red-600' : 'bg-blue-600');
+                button.classList.add(liveDetectionStarted ? 'hover:bg-red-700' : 'hover:bg-blue-700');
+            } else {
+                button.textContent = "Start Detection";
+                button.classList.remove('bg-red-600', 'hover:bg-red-700');
+                button.classList.remove('bg-gray-400', 'hover:bg-gray-500');
+                button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }
+        });
+
+        // Start/Stop Detection Button
         document.getElementById('toggleButton').addEventListener('click', async function () {
             const mode = document.getElementById('modeSelect').value;
             const button = document.getElementById('toggleButton');
             if (mode === "live") {
-                // Start/Stop live detection
                 if (!liveDetectionStarted) {
+                    await startWebcam();
                     await fetch('/toggle_processing', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ enable: true }),
                     });
+                    captureInterval = setInterval(sendWebcamFrame, 200);
+                    startLiveResultImage();
+                    webcamElement.style.opacity = 0;
+                    webcamElement.style.position = 'absolute';
+                    webcamElement.style.pointerEvents = 'none';
+                    liveResultImage.classList.remove('hidden');
                     button.textContent = "Stop Detection";
                     button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                     button.classList.add('bg-red-600', 'hover:bg-red-700');
                     liveDetectionStarted = true;
-                    alert("Detection started!");
                 } else {
+                    clearInterval(captureInterval);
+                    captureInterval = null;
+                    stopLiveResultImage();
                     await fetch('/toggle_processing', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ enable: false }),
                     });
+                    webcamElement.style.opacity = 1;
+                    webcamElement.style.position = '';
+                    webcamElement.style.pointerEvents = '';
+                    liveResultImage.classList.add('hidden');
+                    startWebcam();
                     button.textContent = "Start Detection";
                     button.classList.remove('bg-red-600', 'hover:bg-red-700');
                     button.classList.add('bg-blue-600', 'hover:bg-blue-700');
                     liveDetectionStarted = false;
-                    alert("Detection stopped!");
                 }
             } else if (mode === "image") {
-                // Do image detection
                 if (!capturedFile) {
                     alert("Please upload a captured image first.");
                     return;
@@ -199,7 +289,6 @@
                 const formData = new FormData();
                 formData.append('captured', capturedFile);
 
-                // Lock button to prevent double-click
                 button.disabled = true;
                 button.textContent = "Detecting...";
 
@@ -267,7 +356,37 @@
             }
         }
 
-        setInterval(updateDifferences, 1000);
+        setInterval(updateDifferences, 200);
+
+        // ====== ส่วนสำหรับแสดงผลลัพธ์แบบ realtime =======
+        async function fetchLiveResultImage() {
+            try {
+                const res = await fetch('/live_result_image?' + Date.now());
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    liveResultImage.src = url;
+                } else {
+                    liveResultImage.src = '';
+                }
+            } catch (e) {
+                liveResultImage.src = '';
+            }
+        }
+
+        function startLiveResultImage() {
+            fetchLiveResultImage(); // โหลดครั้งแรกเลย
+            if (!liveImageInterval)
+                liveImageInterval = setInterval(fetchLiveResultImage, 200);
+        }
+        function stopLiveResultImage() {
+            if (liveImageInterval) {
+                clearInterval(liveImageInterval);
+                liveImageInterval = null;
+                liveResultImage.src = '';
+            }
+        }
+        // ===============================================
 
         // Default state
         window.onload = () => {
@@ -279,6 +398,12 @@
             button.textContent = "Start Detection";
             button.classList.remove('bg-red-600', 'hover:bg-red-700');
             button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            webcamElement.style.opacity = 1;
+            webcamElement.style.position = '';
+            webcamElement.style.pointerEvents = '';
+            liveResultImage.classList.add('hidden');
+            startWebcam();
+            stopLiveResultImage();
         };
     </script>
 </body>

@@ -1,11 +1,11 @@
-# from flask import Flask, render_template, request, jsonify, Response
-from flask import Flask, render_template, request, jsonify, Response, send_file
+from flask import Flask, render_template, request, jsonify, send_file
 import cv2
 import numpy as np
 import os
 import string
 import io
 from skimage.metrics import structural_similarity as ssim
+import threading
 
 app = Flask(__name__)
 
@@ -16,20 +16,16 @@ reference_image_path = None
 processing_enabled = False
 reference_image = None
 labels_and_scores = []
+latest_live_frame = None  # <<== สำหรับเก็บเฟรมล่าสุดที่ browser ส่งมา
+lock = threading.Lock()
 
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
-# threshold = 0.75
+# Detection config
 threshold = 0.45
 box_size = (5, 5)
 grid_size = (25, 50)
 
-cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    print("Warning: ไม่สามารถเปิดกล้องได้ แต่โปรแกรมจะยังทำงานต่อ")
-    cap = None 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 def align_images(image1, image2):
     gray1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
@@ -51,12 +47,10 @@ def align_images(image1, image2):
     aligned_image = cv2.warpPerspective(image1, matrix, (width, height))
     return aligned_image
 
-
 def image_transformation(reference_image, captured_image):
     reference_image = cv2.resize(reference_image, (250, 125))
     captured_image = cv2.resize(captured_image, (250, 125))
     return reference_image, captured_image
-
 
 def SSIM_Score(captured_image, reference_image, rows, cols, box_height, box_width, scr):
     differences = []
@@ -68,7 +62,6 @@ def SSIM_Score(captured_image, reference_image, rows, cols, box_height, box_widt
             if score < scr:
                 differences.append((i, j, score))
     return differences
-
 
 def ssim_position(differences, captured_image, box_height, box_width):
     global labels_and_scores
@@ -83,32 +76,6 @@ def ssim_position(differences, captured_image, box_height, box_width):
         labels_and_scores.append((label, score))
     return captured_image
 
-
-def generate():
-    global processing_enabled, reference_image
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        if processing_enabled and reference_image is not None:
-            aligned_frame = align_images(frame, reference_image)
-            transformed_ref, transformed_frame = image_transformation(reference_image, aligned_frame)
-            differences = SSIM_Score(transformed_frame, transformed_ref, grid_size[0], grid_size[1], box_size[0], box_size[1], threshold)
-            highlighted_frame = ssim_position(differences, transformed_frame, box_size[0], box_size[1])
-            
-            height, width = frame.shape[:2]  
-            highlighted_frame = cv2.resize(highlighted_frame, (width, height))  
-        else:
-            highlighted_frame = frame
-
-        (flag, encodedImage) = cv2.imencode(".jpg", highlighted_frame)
-        if not flag:
-            continue
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
-
-
 @app.route('/')
 def index():
     return render_template('home.html')
@@ -116,7 +83,6 @@ def index():
 @app.route('/about.html')
 def about():
     return render_template('about.html')
-
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -136,36 +102,80 @@ def upload_file():
     else:
         return jsonify({'error': 'Invalid file type'}), 400
 
-
 @app.route('/toggle_processing', methods=['POST'])
 def toggle_processing():
     global processing_enabled
     processing_enabled = request.json.get('enable', False)
     return jsonify({'processing_enabled': processing_enabled})
 
+@app.route('/live_frame', methods=['POST'])
+def live_frame():
+    global latest_live_frame
+    if 'frame' not in request.files:
+        return '', 204
+    file = request.files['frame']
+    img_bytes = file.read()
+    npimg = np.frombuffer(img_bytes, np.uint8)
+    frame = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+    if frame is not None:
+        latest_live_frame = frame
+    return '', 204
+
+# def process_live_frame():
+#     global latest_live_frame, reference_image, labels_and_scores
+#     if not processing_enabled or reference_image is None or latest_live_frame is None:
+#         labels_and_scores = []
+#         return None
+
+#     aligned_frame = align_images(latest_live_frame, reference_image)
+#     transformed_ref, transformed_frame = image_transformation(reference_image, aligned_frame)
+#     differences = SSIM_Score(transformed_frame, transformed_ref, grid_size[0], grid_size[1], box_size[0], box_size[1], threshold)
+#     highlighted_frame = ssim_position(differences, transformed_frame, box_size[0], box_size[1])
+#     return highlighted_frame
+def process_live_frame():
+    global latest_live_frame, reference_image, labels_and_scores, latest_result_frame
+    if not processing_enabled or reference_image is None or latest_live_frame is None:
+        labels_and_scores = []
+        with lock:
+            latest_result_frame = None
+        return None
+
+    aligned_frame = align_images(latest_live_frame, reference_image)
+    transformed_ref, transformed_frame = image_transformation(reference_image, aligned_frame)
+    differences = SSIM_Score(transformed_frame, transformed_ref, grid_size[0], grid_size[1], box_size[0], box_size[1], threshold)
+    highlighted_frame = ssim_position(differences, transformed_frame, box_size[0], box_size[1])
+    with lock:
+        latest_result_frame = highlighted_frame
+    return highlighted_frame
+
+@app.route('/live_result_image')
+def live_result_image():
+    global latest_result_frame
+    with lock:
+        frame = latest_result_frame.copy() if latest_result_frame is not None else None
+    if frame is None:
+        return '', 204
+    success, img_encoded = cv2.imencode('.jpg', frame)
+    if not success:
+        return '', 500
+    return send_file(io.BytesIO(img_encoded.tobytes()), mimetype='image/jpeg')
 
 @app.route('/differences')
 def get_differences():
+    process_live_frame()
     global labels_and_scores
     return jsonify({
         'count': len(labels_and_scores),
         'positions': [{'label': label, 'score': score} for label, score in labels_and_scores]
     })
 
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
-
 @app.route('/process_image', methods=['POST'])
 def process_image():
     global reference_image
     try:
         if 'captured' not in request.files:
-            print("No captured in files")
             return jsonify({'error': 'No captured image uploaded.'}), 400
         if reference_image is None:
-            print("No reference image")
             return jsonify({'error': 'No reference image uploaded yet.'}), 400
 
         file = request.files['captured']
@@ -173,22 +183,16 @@ def process_image():
         npimg = np.frombuffer(img_bytes, np.uint8)
         captured_image = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
         if captured_image is None:
-            print("Cannot read uploaded image")
             return jsonify({'error': 'Cannot read uploaded image.'}), 400
 
-        print("Processing...")
         aligned_frame = align_images(captured_image, reference_image)
         transformed_ref, transformed_frame = image_transformation(reference_image, aligned_frame)
-        print("transformed_frame:", transformed_frame.shape, transformed_frame.dtype)
         differences = SSIM_Score(transformed_frame, transformed_ref, grid_size[0], grid_size[1], box_size[0], box_size[1], threshold)
         highlighted_frame = ssim_position(differences, transformed_frame, box_size[0], box_size[1])
-        print("highlighted_frame:", highlighted_frame.shape, highlighted_frame.dtype)
         success, img_encoded = cv2.imencode('.jpg', highlighted_frame)
         if not success:
-            print("Image encoding failed")
             return jsonify({'error': 'Image encoding failed.'}), 500
 
-        print("Returning processed image")
         return send_file(
             io.BytesIO(img_encoded.tobytes()),
             mimetype='image/jpeg',
@@ -201,4 +205,3 @@ def process_image():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5003)
-
