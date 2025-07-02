@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, jsonify, Response
+# from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify, Response, send_file
 import cv2
 import numpy as np
 import os
 import string
+import io
 from skimage.metrics import structural_similarity as ssim
 
 app = Flask(__name__)
@@ -19,7 +21,8 @@ labels_and_scores = []
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-threshold = 0.75
+# threshold = 0.75
+threshold = 0.45
 box_size = (5, 5)
 grid_size = (25, 50)
 
@@ -154,6 +157,47 @@ def get_differences():
 def video_feed():
     return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
+@app.route('/process_image', methods=['POST'])
+def process_image():
+    global reference_image
+    try:
+        if 'captured' not in request.files:
+            print("No captured in files")
+            return jsonify({'error': 'No captured image uploaded.'}), 400
+        if reference_image is None:
+            print("No reference image")
+            return jsonify({'error': 'No reference image uploaded yet.'}), 400
+
+        file = request.files['captured']
+        img_bytes = file.read()
+        npimg = np.frombuffer(img_bytes, np.uint8)
+        captured_image = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+        if captured_image is None:
+            print("Cannot read uploaded image")
+            return jsonify({'error': 'Cannot read uploaded image.'}), 400
+
+        print("Processing...")
+        aligned_frame = align_images(captured_image, reference_image)
+        transformed_ref, transformed_frame = image_transformation(reference_image, aligned_frame)
+        print("transformed_frame:", transformed_frame.shape, transformed_frame.dtype)
+        differences = SSIM_Score(transformed_frame, transformed_ref, grid_size[0], grid_size[1], box_size[0], box_size[1], threshold)
+        highlighted_frame = ssim_position(differences, transformed_frame, box_size[0], box_size[1])
+        print("highlighted_frame:", highlighted_frame.shape, highlighted_frame.dtype)
+        success, img_encoded = cv2.imencode('.jpg', highlighted_frame)
+        if not success:
+            print("Image encoding failed")
+            return jsonify({'error': 'Image encoding failed.'}), 500
+
+        print("Returning processed image")
+        return send_file(
+            io.BytesIO(img_encoded.tobytes()),
+            mimetype='image/jpeg',
+            as_attachment=False
+        )
+    except Exception as e:
+        import traceback
+        print("Exception in /process_image:", traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5003)

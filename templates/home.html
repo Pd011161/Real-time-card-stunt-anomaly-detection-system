@@ -3,67 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Difference Detection</title>
+    <title>Card Stunt Anomaly Detection</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-white text-black min-h-screen flex flex-col">
+<body class="bg-gradient-to-tr from-blue-50 via-purple-50 to-yellow-50 min-h-screen">
 
     <!-- Navbar -->
-    <nav class="w-full dark:bg-gray-800 text-white py-4 px-6 flex items-center justify-between shadow-md">
-        <!-- Logo and Project Name -->
-        <div class="flex items-center space-x-4">
-            <img src="{{ url_for('static', filename='uploads/IMG_6663.JPG') }}" alt="Logo" class="h-10 w-10 rounded-full">
-            <span class="text-2xl font-bold">Real-time card stunt anomaly detection system</span>
+    <nav class="bg-white/80 backdrop-blur border-b border-gray-100 shadow-sm px-8 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <img src="{{ url_for('static', filename='uploads/IMG_6663.JPG') }}" alt="Logo" class="h-10 w-10 rounded-full border">
+            <span class="text-2xl font-extrabold tracking-tight text-gray-800">Card Stunt Anomaly Detection</span>
         </div>
-        <!-- Navigation Links -->
-        <div class="flex space-x-6">
-            <a href="/" class="text-lg font-medium hover:underline">App</a>
-            <a href="/about.html" class="text-lg font-medium hover:underline">About</a>
-
-        </div>        
+        <div class="flex gap-6">
+            <a href="/" class="font-semibold text-gray-700 hover:text-blue-700 transition">App</a>
+            <a href="/about.html" class="font-semibold text-gray-700 hover:text-blue-700 transition">About</a>
+        </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="flex flex-col items-center justify-center flex-grow p-4">
-        <div class="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Main Container -->
+    <main class="flex flex-col items-center w-full min-h-screen py-8 px-2 sm:px-6">
 
-            <!-- Live Detection Section -->
-            <div class="bg-green-100 p-4 rounded-lg border shadow-md">
-                <h2 class="text-lg font-bold mb-2 text-center">Live Detection</h2>
-                <div class="relative w-full overflow-hidden bg-gray-200 rounded-md" style="padding-top: 56.25%; /* 16:9 Aspect Ratio */">
-                    <img src="{{url_for('video_feed')}}" alt="Live Detection" class="absolute top-0 left-0 w-full h-full object-cover">
-                </div>
-                <div class="mt-4 text-center">
-                    <p id="differences" class="text-sm font-bold text-gray-600"><span class="text-red-500"></span></p>
-                </div>
-            </div>
+        
 
-            <!-- Reference Image and Differences Section -->
-            <div class="flex flex-col bg-blue-100 p-4 rounded-lg border shadow-md">
-                <h2 class="text-lg font-bold mb-2 text-center">Reference Image</h2>
-                <div class="mb-4">
-                    <label for="fileInput" class="block text-sm font-medium text-gray-700 mb-2">Upload Reference Image</label>
-                    <input id="fileInput" type="file" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50">
-                </div>
-                <div class="mb-4">
-                    <img id="referenceImage" src="" alt="Reference Image" class="object-contain w-full rounded-md border">
-                </div>
-                <button id="toggleButton" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">Start Detection</button>
+        <!-- Main Card -->
+    <section class="w-full max-w-4xl bg-white/80 shadow-2xl rounded-3xl px-6 py-8 flex flex-col md:flex-row gap-8 border border-gray-200">
+
+        <!-- Reference Image Card + Detection Mode -->
+        <div class="flex-1 flex flex-col gap-5">
+            <!-- Detection Mode Selector อยู่บนสุดของ Card -->
+            <div class="flex flex-col gap-1 mb-2">
+                <label for="modeSelect" class="font-semibold text-lg min-w-max">Detection Mode:</label>
+                <select id="modeSelect" class="rounded-xl border border-gray-300 p-2 text-base bg-white focus:ring-2 focus:ring-blue-400 shadow-sm transition w-full max-w-xs">
+                    <option value="live">Live Detection (Webcam)</option>
+                    <option value="image">Image Detection (Upload)</option>
+                </select>
             </div>
+            <h2 class="text-lg font-bold text-blue-800 mb-1">1. Reference Image</h2>
+            <label for="fileInput" class="block text-base font-medium mb-2 text-gray-800">Upload Reference</label>
+            <input id="fileInput" type="file"
+                class="block w-full text-gray-700 border border-dashed border-blue-400 rounded-xl bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition" />
+            <p class="text-xs text-gray-500 mt-1">JPG, PNG. Max 5MB.</p>
+            <img id="referenceImage" src="" alt="Reference Image"
+                class="aspect-video w-full object-contain bg-gradient-to-br from-blue-100 via-white to-blue-50 rounded-xl border border-blue-200 shadow-inner min-h-[120px]"/>
         </div>
 
-        <!-- Differences Section -->
-        <div class="w-full max-w-4xl bg-purple-100 p-4 mt-6 rounded-lg border shadow-md">
-            <h2 class="text-lg font-bold mb-2 text-center">Differences Position</h2>
-            <div class="relative max-h-32 flex items-center justify-center overflow-y-auto p-2 bg-purple-50 rounded-lg border border-gray-300">
-                <div class="text-sm text-gray-700">
-                    <pre id="position"></pre>
+        <!-- Detection Card -->
+        <div class="flex-1 flex flex-col gap-5">
+            <!-- Detection header -->
+            <div id="liveDetectionSection">
+                <h2 class="text-lg font-bold text-green-800 mb-1">2. Live Detection</h2>
+                <div class="relative w-full flex justify-center overflow-hidden rounded-xl bg-gradient-to-br from-green-100 via-white to-green-50 aspect-video border border-green-200 shadow-inner mb-2">
+                    <img src="{{url_for('video_feed')}}" alt="Live Detection"
+                        class="w-full h-full object-cover" />
+                </div>
+            </div>
+            <div id="imageDetectionSection" class="hidden">
+                <h2 class="text-lg font-bold text-yellow-800 mb-1">2. Image Detection</h2>
+                <label for="capturedImageInput" class="block text-base font-medium mb-2 text-gray-800">Upload Detected Image</label>
+                <input id="capturedImageInput" type="file" accept="image/*"
+                    class="block w-full text-gray-700 border border-dashed border-yellow-400 rounded-xl bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-200 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-yellow-100 file:text-yellow-700 hover:file:bg-yellow-200 transition" />
+                <p class="text-xs text-gray-500 mt-1">JPG, PNG. Max 5MB.</p>
+                <img id="capturedPreview" src="" alt="Captured Preview"
+                    class="aspect-video w-full object-contain bg-gradient-to-br from-yellow-100 via-white to-yellow-50 rounded-xl border border-yellow-200 shadow-inner min-h-[120px]" />
+            </div>
+            <!-- Main Button -->
+            <button id="toggleButton"
+                class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-2.5 rounded-xl shadow hover:from-blue-700 hover:to-purple-700 transition text-lg tracking-wide mt-2">Start Detection</button>
+            <!-- Differences summary -->
+            <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 mt-1 shadow-inner">
+                <div id="differenceSummary" class="flex items-center gap-2">
+                    <span class="text-base font-bold text-purple-800">Summary:</span>
+                    <span id="differencesLive" class="text-sm font-medium text-green-700"></span>
+                    <span id="differencesImage" class="text-sm font-medium text-yellow-700"></span>
+                </div>
+                <!-- Differences Position (Details, compact, not big) -->
+                <div class="flex justify-center mt-2">
+                    <div class="w-full max-w-md">
+                        <div class="rounded-xl border border-purple-100 bg-white/90 shadow px-3 py-2 text-gray-800 text-xs font-mono whitespace-pre-line min-h-[32px]" id="positionBox">
+                            <span class="text-gray-400 italic" id="positionPlaceholder">No differences found.</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </section>
+
     </main>
 
+    <!-- Script Section -->
     <script>
+        // Toggle mode
+        const modeSelect = document.getElementById('modeSelect');
+        const liveSection = document.getElementById('liveDetectionSection');
+        const imageSection = document.getElementById('imageDetectionSection');
+        modeSelect.addEventListener('change', function () {
+            if (modeSelect.value === 'live') {
+                liveSection.classList.remove('hidden');
+                imageSection.classList.add('hidden');
+            } else {
+                liveSection.classList.add('hidden');
+                imageSection.classList.remove('hidden');
+            }
+            // Reset button style/text on mode change
+            const button = document.getElementById('toggleButton');
+            if (modeSelect.value === 'live') {
+                button.textContent = liveDetectionStarted ? "Stop Detection" : "Start Detection";
+                button.classList.remove('bg-gray-400', 'hover:bg-gray-500');
+                button.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-red-600', 'hover:bg-red-700');
+                button.classList.add(liveDetectionStarted ? 'bg-red-600' : 'bg-blue-600');
+                button.classList.add(liveDetectionStarted ? 'hover:bg-red-700' : 'hover:bg-blue-700');
+            } else {
+                button.textContent = "Start Detection";
+                button.classList.remove('bg-red-600', 'hover:bg-red-700');
+                button.classList.remove('bg-gray-400', 'hover:bg-gray-500');
+                button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }
+        });
+
+        // State
+        let capturedFile = null;
+        let liveDetectionStarted = false;
+
+        // Handle Reference Image Upload
         document.getElementById('fileInput').addEventListener('change', async function (event) {
             const file = event.target.files[0];
             if (file) {
@@ -84,55 +149,137 @@
             }
         });
 
+        // Handle Captured Image Upload (preview only)
+        document.getElementById('capturedImageInput').addEventListener('change', function (event) {
+            capturedFile = event.target.files[0];
+            const preview = document.getElementById('capturedPreview');
+            if (!capturedFile) {
+                preview.src = "";
+                return;
+            }
+            preview.src = URL.createObjectURL(capturedFile);
+        });
+
+        // Main Start Detection Button
         document.getElementById('toggleButton').addEventListener('click', async function () {
+            const mode = document.getElementById('modeSelect').value;
             const button = document.getElementById('toggleButton');
+            if (mode === "live") {
+                // Start/Stop live detection
+                if (!liveDetectionStarted) {
+                    await fetch('/toggle_processing', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enable: true }),
+                    });
+                    button.textContent = "Stop Detection";
+                    button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    button.classList.add('bg-red-600', 'hover:bg-red-700');
+                    liveDetectionStarted = true;
+                    alert("Detection started!");
+                } else {
+                    await fetch('/toggle_processing', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enable: false }),
+                    });
+                    button.textContent = "Start Detection";
+                    button.classList.remove('bg-red-600', 'hover:bg-red-700');
+                    button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    liveDetectionStarted = false;
+                    alert("Detection stopped!");
+                }
+            } else if (mode === "image") {
+                // Do image detection
+                if (!capturedFile) {
+                    alert("Please upload a captured image first.");
+                    return;
+                }
+                const preview = document.getElementById('capturedPreview');
+                const formData = new FormData();
+                formData.append('captured', capturedFile);
 
-            if (button.textContent === "Start Detection") {
-                // Enable detection
-                await fetch('/toggle_processing', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ enable: true }),
-                });
+                // Lock button to prevent double-click
+                button.disabled = true;
+                button.textContent = "Detecting...";
 
-                button.textContent = "Stop Detection";
-                button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                button.classList.add('bg-red-600', 'hover:bg-red-700');
+                try {
+                    const res = await fetch('/process_image', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-                alert("Detection started!");
-            } else {
-                // Disable detection
-                await fetch('/toggle_processing', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ enable: false }),
-                });
+                    if (res.ok) {
+                        const blob = await res.blob();
+                        preview.src = URL.createObjectURL(blob);
+                        updateDifferences();
+                    } else {
+                        preview.src = "";
+                        const data = await res.json();
+                        alert(data.error || "Error processing image.");
+                    }
+                } catch (err) {
+                    preview.src = "";
+                    alert("Error processing image.");
+                }
 
+                button.disabled = false;
                 button.textContent = "Start Detection";
-                button.classList.remove('bg-red-600', 'hover:bg-red-700');
-                button.classList.add('bg-blue-600', 'hover:bg-blue-700');
-
-                alert("Detection stopped!");
             }
         });
 
+        // Update Differences Section
         async function updateDifferences() {
             const response = await fetch('/differences');
             const data = await response.json();
+            const mode = document.getElementById('modeSelect').value;
 
-            // Update the differences section
-            document.getElementById('differences').textContent = `Total Difference: ${data.count} positions`;
-            
-            // Update positions
-            const positions = data.positions.map(
-                pos => `Position: ${pos.label} | SSIM Score: ${pos.score.toFixed(4)}`
-            ).join('\n');
-            document.getElementById('position').textContent = positions;
+            if (mode === "live") {
+                document.getElementById('differencesLive').textContent = data.count ? `Total: ${data.count} positions` : "";
+                document.getElementById('differencesImage').textContent = "";
+            } else {
+                document.getElementById('differencesImage').textContent = data.count ? `Total: ${data.count} positions` : "";
+                document.getElementById('differencesLive').textContent = "";
+            }
+
+            // Group labels by row
+            const grouped = {};
+            (data.positions || []).forEach(pos => {
+                const match = pos.label.match(/^([A-Z]+)(\d+)$/);
+                if (match) {
+                    const row = match[1];
+                    const col = match[2];
+                    if (!grouped[row]) grouped[row] = [];
+                    grouped[row].push(col);
+                }
+            });
+            // แปลงเป็นข้อความแสดงผล
+            let groupText = "";
+            Object.keys(grouped).sort().forEach(row => {
+                groupText += `${row}: ${grouped[row].join(', ')}\n`;
+            });
+            // Update compact position box
+            const box = document.getElementById('positionBox');
+            if (groupText.trim().length > 0) {
+                box.innerHTML = groupText.trim();
+            } else {
+                box.innerHTML = '<span class="text-gray-400 italic" id="positionPlaceholder">No differences found.</span>';
+            }
         }
 
-        // Periodically update differences
         setInterval(updateDifferences, 1000);
+
+        // Default state
+        window.onload = () => {
+            document.getElementById('modeSelect').value = "live";
+            liveSection.classList.remove('hidden');
+            imageSection.classList.add('hidden');
+            liveDetectionStarted = false;
+            const button = document.getElementById('toggleButton');
+            button.textContent = "Start Detection";
+            button.classList.remove('bg-red-600', 'hover:bg-red-700');
+            button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        };
     </script>
-    
 </body>
 </html>
