@@ -1,5 +1,9 @@
 # Real-time Card Stunt Anomaly Detection System
 
+
+## 🎬 Demo Video
+
+Experience the app in action! Watch the demo below:
 [![Watch the demo](https://img.youtube.com/vi/Z2ZKleD3Bhc/hqdefault.jpg)](https://youtu.be/Z2ZKleD3Bhc)
 
 A web app for **real-time anomaly detection** on card stunt grids using webcam or uploaded images.  
