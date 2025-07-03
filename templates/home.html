@@ -343,7 +343,7 @@
                     grouped[row].push(col);
                 }
             });
-            // แปลงเป็นข้อความแสดงผล
+            // group position
             let groupText = "";
             Object.keys(grouped).sort().forEach(row => {
                 groupText += `${row}: ${grouped[row].join(', ')}\n`;
@@ -358,7 +358,7 @@
         }
         setInterval(updateDifferences, 200);
 
-        // ====== ส่วนสำหรับแสดงผลลัพธ์แบบ realtime =======
+        // ====== realtime result  =======
         async function fetchLiveResultImage() {
             try {
                 const res = await fetch('/live_result_image?' + Date.now());
@@ -375,7 +375,7 @@
         }
 
         function startLiveResultImage() {
-            fetchLiveResultImage(); // โหลดครั้งแรกเลย
+            fetchLiveResultImage(); 
             if (!liveImageInterval)
                 liveImageInterval = setInterval(fetchLiveResultImage, 200);
         }
