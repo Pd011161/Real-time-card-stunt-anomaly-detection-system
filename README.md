@@ -1,6 +1,6 @@
 # Real-time Card Stunt Anomaly Detection System
 
-![App Screenshot](static/uploads/screenshot.png)
+[▶️ Click to watch demo video]([https://youtu.be/your_video_id](https://youtu.be/Z2ZKleD3Bhc?si=GazFMJaOQ_aOBcOv))
 
 A web app for **real-time anomaly detection** on card stunt grids using webcam or uploaded images.  
 Built with **Flask, OpenCV, SSIM, and TailwindCSS**.  
@@ -41,7 +41,7 @@ docker run -d -p 8080:8080 anomaly-detection-flask-app
 http://localhost:8080/
 ```
 
-🕹️ How to Use
+## 🕹️ How to Use
 
 1. **Upload a Reference Image** (standard card stunt grid)
 2. **Select Detection Mode:**
@@ -53,7 +53,7 @@ http://localhost:8080/
 
 ---
 
-📁 Project Structure
+## 📁 Project Structure
 
 ```bash
 .
@@ -70,7 +70,7 @@ http://localhost:8080/
 
 ---
 
-📝 Example Usage
+## 📝 Example Usage
 
 Live Detection
 
@@ -86,7 +86,7 @@ Image Detection
 
 ---
 
-⚠️ Notes
+## ⚠️ Notes
 
 - Only `.jpg` and `.png` files are supported.
 - The reference and target images should be as similar in size and perspective as possible.
@@ -94,6 +94,6 @@ Image Detection
 
 ---
 
-📝 Quick Summary
+## 📝 Quick Summary
 
 Flask + OpenCV app for real-time and image-based anomaly detection on card stunt grids using grid-based SSIM.
