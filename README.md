@@ -1,6 +1,6 @@
 # Real-time Card Stunt Anomaly Detection System
 
-[![Watch the demo video](https://img.youtube.com/vi/Z2ZKleD3Bhc/hqdefault.jpg)](https://youtu.be/Z2ZKleD3Bhc)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Z2ZKleD3Bhc" frameborder="0" allowfullscreen></iframe>
 
 A web app for **real-time anomaly detection** on card stunt grids using webcam or uploaded images.  
 Built with **Flask, OpenCV, SSIM, and TailwindCSS**.  
