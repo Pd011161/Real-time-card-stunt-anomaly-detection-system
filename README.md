@@ -1,5 +1,7 @@
 # Real-time Card Stunt Anomaly Detection System
 
+![App Screenshot](static/uploads/screenshot.png)
+
 A web app for **real-time anomaly detection** on card stunt grids using webcam or uploaded images.  
 Built with **Flask, OpenCV, SSIM, and TailwindCSS**.  
 Detects and highlights areas of difference based on grid cells, with both visual and text summaries.
