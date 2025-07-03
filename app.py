@@ -7,8 +7,7 @@ import io
 from skimage.metrics import structural_similarity as ssim
 import threading
 
-# app = Flask(__name__)
-app = Flask(__name__, template_folder="../templates", static_folder="../static")
+app = Flask(__name__)
 
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png'}
@@ -122,17 +121,6 @@ def live_frame():
         latest_live_frame = frame
     return '', 204
 
-# def process_live_frame():
-#     global latest_live_frame, reference_image, labels_and_scores
-#     if not processing_enabled or reference_image is None or latest_live_frame is None:
-#         labels_and_scores = []
-#         return None
-
-#     aligned_frame = align_images(latest_live_frame, reference_image)
-#     transformed_ref, transformed_frame = image_transformation(reference_image, aligned_frame)
-#     differences = SSIM_Score(transformed_frame, transformed_ref, grid_size[0], grid_size[1], box_size[0], box_size[1], threshold)
-#     highlighted_frame = ssim_position(differences, transformed_frame, box_size[0], box_size[1])
-#     return highlighted_frame
 def process_live_frame():
     global latest_live_frame, reference_image, labels_and_scores, latest_result_frame
     if not processing_enabled or reference_image is None or latest_live_frame is None:
@@ -163,16 +151,21 @@ def live_result_image():
 
 @app.route('/differences')
 def get_differences():
-    process_live_frame()
+    mode = request.args.get('mode', 'live')
     global labels_and_scores
+    if mode == 'live':
+        process_live_frame()    
+    print(f"[/differences] mode={mode}, labels_and_scores:", labels_and_scores)
     return jsonify({
         'count': len(labels_and_scores),
         'positions': [{'label': label, 'score': score} for label, score in labels_and_scores]
     })
 
+
+
 @app.route('/process_image', methods=['POST'])
 def process_image():
-    global reference_image
+    global reference_image, labels_and_scores
     try:
         if 'captured' not in request.files:
             return jsonify({'error': 'No captured image uploaded.'}), 400
@@ -190,6 +183,19 @@ def process_image():
         transformed_ref, transformed_frame = image_transformation(reference_image, aligned_frame)
         differences = SSIM_Score(transformed_frame, transformed_ref, grid_size[0], grid_size[1], box_size[0], box_size[1], threshold)
         highlighted_frame = ssim_position(differences, transformed_frame, box_size[0], box_size[1])
+        
+        # ========= เพิ่มโค้ดนี้ =========
+        # รีเซ็ตผล differences สำหรับ image detect
+        labels_and_scores = []
+        y_labels = list(string.ascii_uppercase)
+        for (i, j, score) in differences:
+            y_label = y_labels[i % 26]
+            x_label = j + 1
+            label = f"{y_label}{x_label}"
+            labels_and_scores.append((label, score))
+        print("[/process_image] set labels_and_scores =", labels_and_scores)
+        # ================================
+
         success, img_encoded = cv2.imencode('.jpg', highlighted_frame)
         if not success:
             return jsonify({'error': 'Image encoding failed.'}), 500
@@ -204,14 +210,6 @@ def process_image():
         print("Exception in /process_image:", traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
-# if __name__ == '__main__':
-    # app.run(debug=True, host='0.0.0.0', port=5003)
-    # app.run()
 
 if __name__ == '__main__':
-    import os
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
-
-def handler(environ, start_response):
-    return app.wsgi_app(environ, start_response)
+    app.run(debug=True, host='0.0.0.0', port=8080)

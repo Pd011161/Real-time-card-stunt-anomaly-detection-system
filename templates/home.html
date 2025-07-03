@@ -319,9 +319,10 @@
 
         // Update Differences Section
         async function updateDifferences() {
-            const response = await fetch('/differences');
-            const data = await response.json();
             const mode = document.getElementById('modeSelect').value;
+            const response = await fetch(`/differences?mode=${mode}`);
+            const data = await response.json();
+            console.log("updateDifferences(): mode", mode, "data", data);
 
             if (mode === "live") {
                 document.getElementById('differencesLive').textContent = data.count ? `Total: ${data.count} positions` : "";
@@ -355,7 +356,6 @@
                 box.innerHTML = '<span class="text-gray-400 italic" id="positionPlaceholder">No differences found.</span>';
             }
         }
-
         setInterval(updateDifferences, 200);
 
         // ====== ส่วนสำหรับแสดงผลลัพธ์แบบ realtime =======
