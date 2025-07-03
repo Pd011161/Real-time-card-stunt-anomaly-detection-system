@@ -16,7 +16,7 @@ reference_image_path = None
 processing_enabled = False
 reference_image = None
 labels_and_scores = []
-latest_live_frame = None  # <<== สำหรับเก็บเฟรมล่าสุดที่ browser ส่งมา
+latest_live_frame = None  
 lock = threading.Lock()
 
 # Detection config
@@ -161,8 +161,6 @@ def get_differences():
         'positions': [{'label': label, 'score': score} for label, score in labels_and_scores]
     })
 
-
-
 @app.route('/process_image', methods=['POST'])
 def process_image():
     global reference_image, labels_and_scores
@@ -184,8 +182,8 @@ def process_image():
         differences = SSIM_Score(transformed_frame, transformed_ref, grid_size[0], grid_size[1], box_size[0], box_size[1], threshold)
         highlighted_frame = ssim_position(differences, transformed_frame, box_size[0], box_size[1])
         
-        # ========= เพิ่มโค้ดนี้ =========
-        # รีเซ็ตผล differences สำหรับ image detect
+        # ========= add =========
+        # reset image detect differences 
         labels_and_scores = []
         y_labels = list(string.ascii_uppercase)
         for (i, j, score) in differences:
